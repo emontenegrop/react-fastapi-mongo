@@ -1,30 +1,43 @@
-import logo from './logo.svg';
+
 import './App.css';
+import {useState} from 'react'
+import PageWrapper from './components/PageWrapper';
+import Paginacion from './components/Paginacion';
+import Pelicula from './components/Pelicula';
+import peliculasJson from './util/Peliculas.json'
 
-let func = (a) => {
-  return " Hola Mundo" 
-}
-
-const element = <h1>Hello, work!</h1>
 
 function App() {
+
+  const [paginaActual,setPaginaActual] = useState(1);
+  
+  let peliculas = peliculasJson;
+
+
+  peliculas = peliculas.slice((paginaActual -1) * 5 , (paginaActual - 1) * 5 + 5)
+
+  const 
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> aqui estamos {func(12)}   {element}
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <PageWrapper>
+
+      {peliculas.map(pelicula =>
+        <Pelicula titulo={pelicula.titulo} calificacion={pelicula.calificacion}
+          director={pelicula.director} actores={pelicula.actores}
+          fecha={pelicula.fecha} duracion={pelicula.duracion} imagen={pelicula.imagen}>
+          {pelicula.descripcion}
+        </Pelicula>
+      )}
+
+      <Paginacion pagina={paginaActual} total={4} onChange={(pagina)=>{
+        setPaginaActual(pagina)
+      }}>
+
+      </Paginacion>
+
+    </PageWrapper >
+
+
   );
 }
 
