@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function Pelicula(props) {
   return (
     <div className="movie-item-style-2">
