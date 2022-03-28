@@ -6,7 +6,7 @@ export default function Paginacion(props) {
         for (var i = 0; i < props.total; i++) {
             let pagina = i + 1;
             resultado.push(
-                <a onClick={()=>props.onChange(pagina)}
+                <a onClick={() => props.onChange(pagina)}
                     className={props.pagina === pagina ? 'active' : ''} href="#">{pagina}
                 </a>
             );
@@ -16,12 +16,12 @@ export default function Paginacion(props) {
 
     return (
 
-        <div class="topbar-filter">
+        <div className="topbar-filter">
             <label>Movies per page:</label>
-            <div class="pagination2">
+            <div className="pagination2">
                 <span>pagina {props.pagina} de {props.total}:</span>
                 {getPaginas()}
-                <a href="#"><i class="ion-arrow-right-b"></i></a>
+                <a href="#"><i className="ion-arrow-right-b"></i></a>
             </div>
         </div>
 

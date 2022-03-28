@@ -1,25 +1,54 @@
 
 import './App.css';
-import {useState} from 'react'
+import { useState } from 'react'
 import PageWrapper from './components/PageWrapper';
 import Paginacion from './components/Paginacion';
 import Pelicula from './components/Pelicula';
-import peliculasJson from './util/Peliculas.json'
+
 
 
 function App() {
 
-  const [paginaActual,setPaginaActual] = useState(1);
-  
-  let peliculas = peliculasJson;
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [peliculas, setPeliculas] = useState([]);
+
+  const TOTAL_POR_PAGINA = 4;
 
 
-  peliculas = peliculas.slice((paginaActual -1) * 5 , (paginaActual - 1) * 5 + 5)
+  const buscarPeliculas = async () => {
+    let url = 'http://localhost/prueba/Peliculas.json';
+    //Funcion asincronica
+    let respuesta = await fetch(url, {
+      'method': 'GET',
+      'mode':'no-cors',
+      'headers': {
+        'Accept': 'application/json',        
+        'Content-Type': 'application/json; charset=utf-8'
+      }
+    });
 
-  const 
+    let peliculasJson = await respuesta.json();
+    setPeliculas(peliculasJson);
+  };
+
+
+  const cargarPelicualas = () => {
+    /* peliculas = peliculas.slice(
+       (paginaActual - 1) * TOTAL_POR_PAGINA,
+       (paginaActual * TOTAL_POR_PAGINA)
+     );*/
+  }
+
+  const getTotalPaginas = () => {
+    let cantidadTotalPeliculas = peliculas.length;
+    return Math.ceil(cantidadTotalPeliculas / TOTAL_POR_PAGINA)
+  }
+
+
 
   return (
     <PageWrapper>
+      <button onClick={buscarPeliculas}>Prueba</button>
 
       {peliculas.map(pelicula =>
         <Pelicula titulo={pelicula.titulo} calificacion={pelicula.calificacion}
@@ -29,7 +58,7 @@ function App() {
         </Pelicula>
       )}
 
-      <Paginacion pagina={paginaActual} total={4} onChange={(pagina)=>{
+      <Paginacion pagina={paginaActual} total={getTotalPaginas()} onChange={(pagina) => {
         setPaginaActual(pagina)
       }}>
 
