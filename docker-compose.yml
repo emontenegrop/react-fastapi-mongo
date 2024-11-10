@@ -1,0 +1,135 @@
+volumes:
+  postgres_data: {}
+  postgres_data_backups: {}
+  mongo-data: {}
+
+services:
+
+  mongodb:
+    image: mongodb/mongodb-community-server:8.0-ubi9
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      - MONGODB_INITDB_ROOT_USERNAME=archivos_app
+      - MONGODB_INITDB_ROOT_PASSWORD=secret
+      - TZ=America/Guayaquil
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - 27017:27017
+    networks:
+      archivos:
+        ipv4_address: 30.30.1.10
+
+  postgresdb:
+    image: postgres:17.0-alpine
+    container_name: postgresdb
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_backups:/backups
+    env_file:
+      - ./back-users/.envs/postgres.env
+    ports:
+      - "5454:5432"
+    networks:
+      archivos:
+        ipv4_address: 30.30.1.5
+
+  back-users:
+    build:
+      context: .
+      dockerfile: ./back-users/.compose/local/Dockerfile
+    image: back-users
+    container_name: back-users
+    restart: unless-stopped
+    command: /code/start
+    volumes:
+      - ./back-users/app:/code/app
+    env_file:
+      - ./back-users/.envs/fastapi.env
+    ports:
+      - 8081:8080
+      - 5679:5678
+
+    healthcheck:
+      test: curl --fail -G http://30.30.1.6:8080/api/v1/health/ || exit 1
+      interval: 60s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      gateway:
+        ipv4_address: 10.10.1.2
+      archivos:
+        ipv4_address: 30.30.1.6
+
+  back-files:
+    build:
+      context: .
+      dockerfile: ./back-files/.compose/local/Dockerfile
+    image: back-files
+    restart: unless-stopped
+    container_name: back-files
+    volumes:
+      - ./back-files/app:/code/app
+      - ./back-files/repo:/code/repo
+      - ./back-files/pytest.ini:/code/pytest.ini
+    env_file:
+      - ./back-files/.envs/mongo.env
+    ports:
+      - 8082:8080
+      - 5680:5678
+
+    healthcheck:
+      test: curl --fail -G http://30.30.1.7:8080/api/v1/health/ || exit 1
+      interval: 60s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      archivos:
+        ipv4_address: 30.30.1.7
+      gateway:
+        ipv4_address: 10.10.1.3
+
+  back-logs:
+    build:
+      context: .
+      dockerfile: ./back-logs/.compose/local/Dockerfile
+    image: back-logs
+    restart: unless-stopped
+    container_name: back-logs
+    volumes:
+      - ./back-logs/./app:/code/app
+    env_file:
+      - ./back-logs/.envs/mongo.env
+    ports:
+      - 8083:8080
+      - 5681:5678
+
+    healthcheck:
+      test: curl --fail -G http://30.30.1.8:8080/api/v1/health/ || exit 1
+      interval: 60s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      archivos:
+        ipv4_address: 30.30.1.8
+      gateway:
+        ipv4_address: 10.10.1.4
+
+networks:
+  archivos:
+    name: archivos
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 30.30.1.0/24
+  gateway:
+    name: gateway
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.10.1.0/24

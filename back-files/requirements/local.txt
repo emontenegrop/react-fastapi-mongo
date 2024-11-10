@@ -1,0 +1,8 @@
+-r ./base.txt
+
+#Test
+email-validator==2.1.1
+pytest-asyncio==0.24.0 
+pytest==8.3.3
+pytest-mock==3.14.0 
+pytest-html==4.1.1

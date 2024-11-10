@@ -1,70 +1,26 @@
-# Getting Started with Create React App
+# Arquitectura Propuesta
+Construir una API para la gestión de archivos utilizando MongoDB, FastAPI y React considera la flexibilidad y escalabilidad que ofrecen estas tecnologías. 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## MongoDB
 
-## Available Scripts
+    Es una base de datos NoSQL que permite almacenar datos en formato flexible, lo que es ideal para gestionar rutas de archivos. Su modelo de documentos facilita la inclusión de metadatos adicionales sobre los archivos, como tamaño, tipo y fecha de creación.
 
-In the project directory, you can run:
+## FastAPI
 
-### `npm start`
+    Es conocido por su alto rendimiento y facilidad de uso. Permite crear APIs RESTful de manera rápida y eficiente, con soporte automático para la validación de datos y documentación generada automáticamente. Implementar operaciones básicas (Crear, Leer, Actualizar, Eliminar) para gestionar las rutas de los archivos almacenados en MongoDB es sencillo y rápido con FastAPI.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## React
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+    Es una biblioteca popular para construir interfaces de usuario interactivas. Permite crear componentes reutilizables que pueden comunicarse fácilmente con el backend a través de solicitudes HTTP. Puedes diseñar formularios para cargar archivos, visualizar listas de archivos y permitir acciones como la descarga o eliminación.
 
-### `npm test`
+## Almacenamiento de Archivos
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+    Guardar los archivos comprimidos en el disco duro del servidor es una práctica común. Esto puede hacerse utilizando bibliotecas como os en Python. Considera utilizar herramientas como gzip o zip para reducir el tamaño de los archivos antes de almacenarlos
 
-### `npm run build`
+## Seguridad 
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+    Implementar autenticación y autorización acceso a la API y los archivos almacenados.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Errores
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+    Asegúrate de implementar un manejo adecuado de errores tanto en el backend como en el frontend para mejorar la experiencia del usuario.
