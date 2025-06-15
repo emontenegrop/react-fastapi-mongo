@@ -1,6 +1,8 @@
 # API de Gestión de Archivos — Arquitectura Modular con FastAPI, MongoDB y React
 ¿Y si pudiéramos construir un sistema moderno, flexible y escalable para gestionar archivos, con una arquitectura pensada desde cero para microservicios? Este proyecto nace con ese objetivo: combinar lo mejor del ecosistema web moderno para crear una solución robusta y extensible que permita almacenar, visualizar y administrar archivos de forma eficiente.
 
+![Modelo Conceptual](images/proyecto-conceptual.png)
+
 ## ¿Qué es este proyecto?
 Es una plataforma para la gestión de archivos que aprovecha tecnologías punteras como MongoDB, FastAPI y React. Su objetivo es proporcionar una base sólida para construir un sistema distribuido orientado a microservicios, donde cada componente pueda escalar de manera independiente.
 
