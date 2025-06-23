@@ -39,6 +39,7 @@ public class MenuService {
 
     public List<MenuDTO> getMenuEstructurado(Long menuId) {
         List<MenuItem> items = menuItemRepository.findByMenuId(menuId);
+        System.out.println(items);
 
         //Convertimos todo a DTOS primero
 

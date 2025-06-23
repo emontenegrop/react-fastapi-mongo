@@ -46,4 +46,14 @@ public class MenuController {
         List<MenuDTO> menu = menuService.getMenuEstructurado(menuId);
         return ResponseEntity.ok(menu);
     }
+
+    @GetMapping("/menu")
+    public List<MenuDTO> getMenu() {
+    MenuDTO dto = new MenuDTO();
+    dto.setId(1L);
+    dto.setTitle("Inicio");
+    dto.setPath("/inicio");
+
+    return List.of(dto);
+}
 }

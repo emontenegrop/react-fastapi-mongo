@@ -1,5 +1,7 @@
 package ec.emtechnology.options.model.menu;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -50,12 +52,14 @@ public class MenuItem {
     private Menu menu;
 
     // Relación recursiva con padre
+    @JsonBackReference //Es la parte "inversa" (el padre), que se ignora durante la serialización
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "padre_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private MenuItem padre;
 
     // Relación uno a muchos con hijos
+    @JsonManagedReference //Es la parte "principal" de la relación (los hijos)
     @OneToMany(mappedBy = "padre", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MenuItem> hijos = new ArrayList<>();
 

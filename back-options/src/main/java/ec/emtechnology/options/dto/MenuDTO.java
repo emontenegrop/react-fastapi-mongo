@@ -2,11 +2,15 @@ package ec.emtechnology.options.dto;
 
 import ec.emtechnology.options.model.menu.MenuItem;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Data
+@NoArgsConstructor
 public class MenuDTO {
 
     private Long id;
@@ -16,6 +20,7 @@ public class MenuDTO {
     private String type;
     private Integer order;
     private Boolean isVisible;
+    @JsonManagedReference
     private List<MenuDTO> hijos = new ArrayList<>();
 
     // Constructor básico
@@ -27,6 +32,7 @@ public class MenuDTO {
         this.type = item.getType();
         this.order = item.getOrder();
         this.isVisible = item.isVisible();
+        this.hijos = new ArrayList<>(); // opcional
     }
 
     // Getters y setters

@@ -36,34 +36,7 @@ services:
       archivos:
         ipv4_address: 30.30.1.5
 
-  # back-users:
-  #   build:
-  #     context: .
-  #     dockerfile: ./back-users/.compose/local/Dockerfile
-  #   image: back-users
-  #   container_name: back-users
-  #   restart: unless-stopped
-  #   command: /code/start
-  #   volumes:
-  #     - ./back-users/app:/code/app
-  #   env_file:
-  #     - ./back-users/.envs/fastapi.env
-  #   ports:
-  #     - 8081:8080
-  #     - 5679:5678
-
-  #   healthcheck:
-  #     test: curl --fail -G http://30.30.1.6:8080/api/v1/health/ || exit 1
-  #     interval: 60s
-  #     timeout: 5s
-  #     retries: 5
-
-  #   networks:
-  #     gateway:
-  #       ipv4_address: 10.10.1.2
-  #     archivos:
-  #       ipv4_address: 30.30.1.6
-
+  
   back-files:
     build:
       context: .
@@ -119,6 +92,40 @@ services:
         ipv4_address: 30.30.1.8
       gateway:
         ipv4_address: 10.10.1.4
+
+  back-users:
+        image: openjdk:21-jdk-slim   # Imagen base con JDK necesario para ejecutar .jar
+        container_name: back-users
+        ports:
+          - "8090:8090"              # Mapeo del puerto interno al externo
+        volumes:
+          - ./back-users/target/users-0.0.1-SNAPSHOT.jar:/app.jar       # Monta el archivo .jar local en el contenedor
+        command: ["java", "-jar", "/app.jar"]  # Comando para ejecutar el jar dentro del contenedor
+        environment:
+          - SPRING_PROFILES_ACTIVE=prod  # Ejemplo de variable de entorno
+        restart: unless-stopped
+        networks:
+          gateway:
+            ipv4_address: 10.10.1.5
+          archivos:
+            ipv4_address: 30.30.1.9
+
+  back-options:
+        image: openjdk:21-jdk-slim   # Imagen base con JDK necesario para ejecutar .jar
+        container_name: back-options
+        ports:
+          - "8091:8091"              # Mapeo del puerto interno al externo
+        volumes:
+          - ./back-options/target/options-0.0.1-SNAPSHOT.jar:/app.jar       # Monta el archivo .jar local en el contenedor
+        command: ["java", "-jar", "/app.jar"]  # Comando para ejecutar el jar dentro del contenedor
+        environment:
+          - SPRING_PROFILES_ACTIVE=prod  # Ejemplo de variable de entorno
+        restart: unless-stopped
+        networks:
+          gateway:
+            ipv4_address: 10.10.1.6
+          archivos:
+            ipv4_address: 30.30.1.11
 
 networks:
   archivos:
