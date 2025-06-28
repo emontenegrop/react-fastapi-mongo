@@ -14,7 +14,7 @@ export const MenuProvider = ({ children }) => {
             if (isAuthenticated && user?.role) {
                 try {
                     // El backend debe devolver las opciones de menú basadas en el rol
-                    const response = await axiosInstance.get(`/api/menu?role=${user.role}`);
+                    const response = await axiosInstance.get(`http://localhost:8082/api/v1/menu?role=${user.role}`);
                     setMenuItems(response.data.menu);
                 } catch (error) {
                     console.error("Error al obtener el menú:", error);

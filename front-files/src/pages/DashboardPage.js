@@ -11,7 +11,7 @@ const DashboardPage = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const response = await axiosInstance.get('/api/auth/me');
+                const response = await axiosInstance.get('http://localhost:8082/api/v1/auth/me');
                 setProfileData(response.data.user);
             } catch (error) {
                 console.error("Error al obtener el perfil:", error);
