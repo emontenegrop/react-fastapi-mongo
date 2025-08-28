@@ -4,7 +4,6 @@ volumes:
   mongo-data: {}
 
 services:
-
   mongodb:
     image: mongodb/mongodb-community-server:8.0-ubi9
     container_name: mongodb
@@ -36,7 +35,6 @@ services:
       archivos:
         ipv4_address: 30.30.1.5
 
-  
   back-files:
     build:
       context: .
@@ -86,7 +84,7 @@ services:
       interval: 60s
       timeout: 5s
       retries: 5
-    
+
     networks:
       archivos:
         ipv4_address: 30.30.1.8
@@ -94,38 +92,56 @@ services:
         ipv4_address: 10.10.1.4
 
   back-users:
-        image: openjdk:21-jdk-slim   # Imagen base con JDK necesario para ejecutar .jar
-        container_name: back-users
-        ports:
-          - "8090:8090"              # Mapeo del puerto interno al externo
-        volumes:
-          - ./back-users/target/users-0.0.1-SNAPSHOT.jar:/app.jar       # Monta el archivo .jar local en el contenedor
-        command: ["java", "-jar", "/app.jar"]  # Comando para ejecutar el jar dentro del contenedor
-        environment:
-          - SPRING_PROFILES_ACTIVE=prod  # Ejemplo de variable de entorno
-        restart: unless-stopped
-        networks:
-          gateway:
-            ipv4_address: 10.10.1.5
-          archivos:
-            ipv4_address: 30.30.1.9
+    image: openjdk:21-jdk-slim
+    container_name: back-users
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./back-users/target/users-0.0.1-SNAPSHOT.jar:/app.jar
+    command: ["java", "-jar", "/app.jar"]
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    restart: unless-stopped
+    networks:
+      gateway:
+        ipv4_address: 10.10.1.5
+      archivos:
+        ipv4_address: 30.30.1.9
 
   back-options:
-        image: openjdk:21-jdk-slim   # Imagen base con JDK necesario para ejecutar .jar
-        container_name: back-options
-        ports:
-          - "8091:8091"              # Mapeo del puerto interno al externo
-        volumes:
-          - ./back-options/target/options-0.0.1-SNAPSHOT.jar:/app.jar       # Monta el archivo .jar local en el contenedor
-        command: ["java", "-jar", "/app.jar"]  # Comando para ejecutar el jar dentro del contenedor
-        environment:
-          - SPRING_PROFILES_ACTIVE=prod  # Ejemplo de variable de entorno
-        restart: unless-stopped
-        networks:
-          gateway:
-            ipv4_address: 10.10.1.6
-          archivos:
-            ipv4_address: 30.30.1.11
+    image: openjdk:21-jdk-slim
+    container_name: back-options
+    ports:
+      - "8091:8091"
+    volumes:
+      - ./back-options/target/options-0.0.1-SNAPSHOT.jar:/app.jar
+    command: ["java", "-jar", "/app.jar"]
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    restart: unless-stopped
+    networks:
+      gateway:
+        ipv4_address: 10.10.1.6
+      archivos:
+        ipv4_address: 30.30.1.11
+
+  front-files:
+    build:
+      context: .
+      dockerfile: ./back-logs/.compose/local/Dockerfile
+    image: openjdk:21-jdk-slim
+    container_name: back-options
+    ports:
+      - "8091:8091"
+    volumes:
+      - ./back-options/target/options-0.0.1-SNAPSHOT.jar:/app.jar
+    command: ["java", "-jar", "/app.jar"]
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    restart: unless-stopped
+    networks:
+      archivos:
+        ipv4_address: 30.30.1.11
 
 networks:
   archivos:

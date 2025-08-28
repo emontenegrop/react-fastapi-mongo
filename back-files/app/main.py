@@ -6,6 +6,7 @@ from app.docs import tags_metadata
 from app.routes.document_file_upload import router as DocumentFileUploadRouter
 from app.routes.file_path import router as FilePathRouter
 from app.routes.health_checks import router as health_router
+from app.routes.create_token import router as create_token_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -58,5 +59,10 @@ app.include_router(
 )
 app.include_router(
     health_router, 
+    prefix="/api/v1"
+)
+
+app.include_router(
+    create_token_router, 
     prefix="/api/v1"
 )

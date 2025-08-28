@@ -1,0 +1,511 @@
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, User, Lock, Mail, Shield, Menu, X, Home, Users, Settings, LogOut } from 'lucide-react';
+
+// Componente Header
+const Header = ({ user, onLogout }) => {
+  return (
+    <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <Shield className="w-8 h-8" />
+          <h1 className="text-xl font-bold">Sistema Seguro</h1>
+        </div>
+        {user && (
+          <div className="flex items-center space-x-4">
+            <span>Bienvenido, {user.nombre}</span>
+            <button
+              onClick={onLogout}
+              className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 px-3 py-1 rounded transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Salir</span>
+            </button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+// Componente Sidebar
+const Sidebar = ({ menuItems, isOpen, toggleSidebar }) => {
+  return (
+    <>
+      {/* Overlay para móvil */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={toggleSidebar}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <aside className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        <div className="p-4">
+          <div className="flex justify-between items-center lg:hidden mb-4">
+            <h2 className="text-lg font-semibold">Menú</h2>
+            <button onClick={toggleSidebar}>
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          
+          <nav className="space-y-2">
+            {menuItems.map((item, index) => (
+              <button
+                key={index}
+                className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-700 transition-colors text-left"
+              >
+                {item.icono === 'home' && <Home className="w-5 h-5" />}
+                {item.icono === 'users' && <Users className="w-5 h-5" />}
+                {item.icono === 'settings' && <Settings className="w-5 h-5" />}
+                <span>{item.nombre}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+// Componente Footer
+const Footer = () => {
+  return (
+    <footer className="bg-gray-800 text-white p-4 text-center">
+      <p>&copy; {new Date().getFullYear()} Sistema Seguro. Todos los derechos reservados.</p>
+    </footer>
+  );
+};
+
+// Componente Login Form
+const LoginForm = ({ onLogin, onForgotPassword }) => {
+  const [formData, setFormData] = useState({
+    usuario: '',
+    password: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError('');
+  };
+
+  const handleSubmit = (e) => {
+    e?.preventDefault?.();
+    setLoading(true);
+    setError('');
+
+    try {
+      // Validaciones básicas
+      if (!formData.usuario || !formData.password) {
+        throw new Error('Por favor complete todos los campos');
+      }
+
+      onLogin(formData).catch(err => {
+        setError(err.message);
+      }).finally(() => {
+        setLoading(false);
+      });
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <Shield className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-gray-800">Iniciar Sesión</h2>
+          <p className="text-gray-600 mt-2">Accede a tu cuenta de forma segura</p>
+        </div>
+
+        <div className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Usuario
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                name="usuario"
+                value={formData.usuario}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ingrese su usuario"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Contraseña
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Ingrese su contraseña"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Ingresando...' : 'Ingresar'}
+          </button>
+
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Componente Password Recovery
+const PasswordRecovery = ({ onBack, onSendRecovery }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const handleSubmit = (e) => {
+    e?.preventDefault?.();
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      if (!email) {
+        throw new Error('Por favor ingrese su correo electrónico');
+      }
+
+      if (!validateEmail(email)) {
+        throw new Error('Por favor ingrese un correo electrónico válido');
+      }
+
+      onSendRecovery(email).then(() => {
+        setMessage('Se ha enviado un enlace de recuperación a su correo electrónico. El enlace será válido por 5 minutos.');
+      }).catch(err => {
+        setError(err.message);
+      }).finally(() => {
+        setLoading(false);
+      });
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <Mail className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-gray-800">Recuperar Contraseña</h2>
+          <p className="text-gray-600 mt-2">Ingrese su correo para recibir el enlace de recuperación</p>
+        </div>
+
+        <div className="space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+              {message}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Correo Electrónico
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="correo@ejemplo.com"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Enviando...' : 'Enviar Enlace de Recuperación'}
+          </button>
+
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+          >
+            Volver al Login
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Componente Main Content
+const MainContent = ({ children, sidebarOpen, toggleSidebar }) => {
+  return (
+    <main className="flex-1 flex flex-col">
+      <div className="lg:hidden p-4 bg-white shadow-sm">
+        <button
+          onClick={toggleSidebar}
+          className="flex items-center space-x-2 text-gray-600"
+        >
+          <Menu className="w-6 h-6" />
+          <span>Menú</span>
+        </button>
+      </div>
+      
+      <div className="flex-1 p-6 bg-gray-50">
+        {children}
+      </div>
+    </main>
+  );
+};
+
+// Componente Dashboard
+const Dashboard = ({ user, menuItems, onLogout }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header user={user} onLogout={onLogout} />
+      
+      <div className="flex flex-1">
+        <Sidebar 
+          menuItems={menuItems} 
+          isOpen={sidebarOpen}
+          toggleSidebar={toggleSidebar}
+        />
+        
+        <MainContent sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar}>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              Dashboard - {user.rol}
+            </h2>
+            <p className="text-gray-600">
+              Bienvenido al sistema, {user.nombre}. Su rol es: <span className="font-semibold">{user.rol}</span>
+            </p>
+            
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {menuItems.map((item, index) => (
+                <div key={index} className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-3">
+                    {item.icono === 'home' && <Home className="w-6 h-6 text-blue-600" />}
+                    {item.icono === 'users' && <Users className="w-6 h-6 text-blue-600" />}
+                    {item.icono === 'settings' && <Settings className="w-6 h-6 text-blue-600" />}
+                    <div>
+                      <h3 className="font-semibold text-gray-800">{item.nombre}</h3>
+                      <p className="text-sm text-gray-600">{item.descripcion}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </MainContent>
+      </div>
+      
+      <Footer />
+    </div>
+  );
+};
+
+// Simulación de servicios API
+const ApiService = {
+  // Simulación de login
+  async login(usuario, password) {
+    // Simular delay de red
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Simular encriptación (en producción usar bcrypt o similar)
+    const hashedPassword = btoa(password); // Base64 básico para demo
+    
+    // Simulación de usuarios
+    const users = {
+      'admin': { password: btoa('admin123'), nombre: 'Administrador', rol: 'administrador', email: 'admin@sistema.com' },
+      'usuario': { password: btoa('user123'), nombre: 'Usuario Regular', rol: 'usuario', email: 'user@sistema.com' }
+    };
+    
+    const user = users[usuario];
+    if (!user || user.password !== hashedPassword) {
+      throw new Error('Usuario o contraseña incorrectos');
+    }
+    
+    return {
+      usuario: usuario,
+      nombre: user.nombre,
+      rol: user.rol,
+      email: user.email
+    };
+  },
+
+  // Simulación de recuperación de menús
+  async getMenuByRole(rol) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const menus = {
+      'administrador': [
+        { nombre: 'Dashboard', icono: 'home', descripcion: 'Panel principal' },
+        { nombre: 'Usuarios', icono: 'users', descripcion: 'Gestión de usuarios' },
+        { nombre: 'Configuración', icono: 'settings', descripcion: 'Configuración del sistema' }
+      ],
+      'usuario': [
+        { nombre: 'Dashboard', icono: 'home', descripcion: 'Panel principal' },
+        { nombre: 'Mi Perfil', icono: 'users', descripcion: 'Información personal' }
+      ]
+    };
+    
+    return menus[rol] || [];
+  },
+
+  // Simulación de recuperación de contraseña
+  async sendPasswordRecovery(email) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Generar código de autorización
+    const authCode = Math.random().toString(36).substring(2, 15);
+    const expirationTime = Date.now() + (5 * 60 * 1000); // 5 minutos
+    
+    // En producción, aquí se enviaría el email con el template
+    console.log('Email de recuperación enviado a:', email);
+    console.log('Código de autorización:', authCode);
+    console.log('Válido hasta:', new Date(expirationTime));
+    
+    // Simular que siempre es exitoso
+    return true;
+  }
+};
+
+// Componente principal de la aplicación
+const App = () => {
+  const [currentView, setCurrentView] = useState('login');
+  const [user, setUser] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
+
+  const handleLogin = async (formData) => {
+    try {
+      const userData = await ApiService.login(formData.usuario, formData.password);
+      const userMenu = await ApiService.getMenuByRole(userData.rol);
+      
+      setUser(userData);
+      setMenuItems(userMenu);
+      setCurrentView('dashboard');
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setMenuItems([]);
+    setCurrentView('login');
+  };
+
+  const handleForgotPassword = () => {
+    setCurrentView('recovery');
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentView('login');
+  };
+
+  const handleSendRecovery = async (email) => {
+    await ApiService.sendPasswordRecovery(email);
+  };
+
+  return (
+    <div className="App">
+      {currentView === 'login' && (
+        <LoginForm 
+          onLogin={handleLogin}
+          onForgotPassword={handleForgotPassword}
+        />
+      )}
+      
+      {currentView === 'recovery' && (
+        <PasswordRecovery
+          onBack={handleBackToLogin}
+          onSendRecovery={handleSendRecovery}
+        />
+      )}
+      
+      {currentView === 'dashboard' && user && (
+        <Dashboard
+          user={user}
+          menuItems={menuItems}
+          onLogout={handleLogout}
+        />
+      )}
+    </div>
+  );
+};
+
+export default App;

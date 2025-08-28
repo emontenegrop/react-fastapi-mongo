@@ -7,6 +7,8 @@ python-dotenv==1.0.1
 zeep==4.2.1
 python-multipart==0.0.9
 httpx==0.27.0 #HTTP client
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
 
 #mongo
 dnspython==2.6.1
