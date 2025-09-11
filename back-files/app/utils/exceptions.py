@@ -3,7 +3,7 @@
 from typing import Any, Dict, Optional
 
 from app.config.messages import Messages as msg
-from app.schemas.errro_content_schema import ErrorContentSchema
+from app.schemas.error_content_schema import ErrorContentSchema
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
 

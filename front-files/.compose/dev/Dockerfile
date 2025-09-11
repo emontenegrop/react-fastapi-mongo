@@ -5,12 +5,12 @@ RUN mkdir /app
 WORKDIR /app
 
 # Copiamos solo package.json primero para cachear instalación
-COPY ./front-end/package*.json ./
+COPY ./front-files/package*.json ./
 
 RUN npm install
 
 # Copiamos el resto del proyecto
-COPY ./front-end .
+COPY ./front-files .
 
 # Hot reload
 ENV CHOKIDAR_USEPOLLING=true

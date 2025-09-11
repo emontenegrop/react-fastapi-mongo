@@ -8,14 +8,17 @@ from datetime import datetime, timedelta
 from typing import Optional
 import os
 from app.middleware.router_error_handler import RouteErrorHandler
+from app.config.settings import settings
 
 router = APIRouter(route_class=RouteErrorHandler)
 
 
 # Configuración
-SECRET_KEY = os.getenv("SECRET_KEY", "tu-clave-secreta-super-segura")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 # Configuración de seguridad
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

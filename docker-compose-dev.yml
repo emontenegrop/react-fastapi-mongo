@@ -2,23 +2,56 @@ volumes:
   postgres_data: {}
   postgres_data_backups: {}
   mongo-data: {}
+  redis-data: {}
+
+secrets:
+  mongo_user:
+    file: ./secrets/mongo_user.txt
+  mongo_password:
+    file: ./secrets/mongo_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
 
 services:
   mongodb:
     image: mongodb/mongodb-community-server:8.0-ubi9
     container_name: mongodb
     restart: unless-stopped
+    command: ["mongod", "--noauth"]
     environment:
-      - MONGODB_INITDB_ROOT_USERNAME=archivos_app
-      - MONGODB_INITDB_ROOT_PASSWORD=secret
       - TZ=America/Guayaquil
     volumes:
       - mongo-data:/data/db
     ports:
       - 27017:27017
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       archivos:
         ipv4_address: 30.30.1.10
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      archivos:
+        ipv4_address: 30.30.1.12
 
   postgresdb:
     image: postgres:17.0-alpine
@@ -31,6 +64,11 @@ services:
       - ./back-users/.envs/postgres.env
     ports:
       - "5454:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       archivos:
         ipv4_address: 30.30.1.5
@@ -51,13 +89,19 @@ services:
     ports:
       - 8082:8080
       - 5680:5678
-
+    secrets:
+      - jwt_secret
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     healthcheck:
-      test: curl --fail -G http://30.30.1.7:8080/api/v1/health/ || exit 1
-      interval: 60s
-      timeout: 5s
-      retries: 5
-
+      test: ["CMD", "curl", "--fail", "-H", "Accept: application/json", "http://localhost:8080/api/v1/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       archivos:
         ipv4_address: 30.30.1.7
@@ -128,20 +172,28 @@ services:
   front-files:
     build:
       context: .
-      dockerfile: ./back-logs/.compose/local/Dockerfile
-    image: openjdk:21-jdk-slim
-    container_name: back-options
+      dockerfile: ./front-files/.compose/dev/Dockerfile
+    image: front-files
+    container_name: front-files
     ports:
-      - "8091:8091"
+      - "3001:3000"
     volumes:
-      - ./back-options/target/options-0.0.1-SNAPSHOT.jar:/app.jar
-    command: ["java", "-jar", "/app.jar"]
+      - ./front-files:/app
+      - /app/node_modules
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
+      - REACT_APP_API_BASE_URL=http://localhost:8082/api/v1
+      - REACT_APP_ENV=development
     restart: unless-stopped
+    depends_on:
+      - back-files
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
-      archivos:
-        ipv4_address: 30.30.1.11
+      gateway:
+        ipv4_address: 10.10.1.7
 
 networks:
   archivos:

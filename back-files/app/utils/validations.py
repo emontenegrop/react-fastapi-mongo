@@ -7,7 +7,7 @@ from app.utils.exceptions import DetailHttpException
 from requests.exceptions import ConnectTimeout, RequestException
 from fastapi import status
 from app.config.messages import Messages as msg
-from app.schemas.errro_content_schema import ErrorContentSchema as Detail
+from app.schemas.error_content_schema import ErrorContentSchema as Detail
 
 
 def validate_field_int(field_name: str, field_value: object):

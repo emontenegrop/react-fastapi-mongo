@@ -1,6 +1,6 @@
 """Parametrización de mensajes del sistema"""
 
-from app.schemas.errro_content_schema import ErrorContentSchema as Detail
+from app.schemas.error_content_schema import ErrorContentSchema as Detail
 
 PREFIX = "FILE"
 

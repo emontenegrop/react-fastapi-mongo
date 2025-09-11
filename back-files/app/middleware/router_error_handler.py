@@ -27,7 +27,7 @@ class RouteErrorHandler(APIRoute):
                 return await original_route_handler(request)
             except ValidationError as exc:  # type: ignore
                 data_log = data_headers(request)
-                create_log_error(
+                await create_log_error(
                     data_log,
                     status.HTTP_422_UNPROCESSABLE_ENTITY,
                     jsonable_encoder(exc),
@@ -43,7 +43,7 @@ class RouteErrorHandler(APIRoute):
 
             except DetailHttpException as exc:
                 data_log = data_headers(request)
-                create_log_error(
+                await create_log_error(
                     data_log,
                     exc.status_code,
                     exc.detail,
@@ -55,11 +55,12 @@ class RouteErrorHandler(APIRoute):
 
             except Exception as exc:
                 data_log = data_headers(request)
-                logger.debug(traceback.format_exc)
-                create_log_error(
+                logger.error(f"Unexpected error in {request.url.path}: {exc}")
+                logger.debug(traceback.format_exc())
+                await create_log_error(
                     data_log,
                     status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    jsonable_encoder(exc),
+                    jsonable_encoder(str(exc)),
                     jsonable_encoder(traceback.format_exc()),
                     format(time.time() - start_time),
                 )
@@ -69,7 +70,7 @@ class RouteErrorHandler(APIRoute):
                 # wrap error into pretty 500 exception
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=str(exc),
+                    detail=jsonable_encoder(Messages.API_UNEXPECTED_ERROR),
                 )
 
         return custom_route_handler

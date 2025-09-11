@@ -12,10 +12,16 @@ ENV TZ=America/Guayaquil
 COPY ./back-files/.compose/local/start.sh /code/start.sh
 
 
+# Install build dependencies for psutil and other compiled packages
+RUN apk add --no-cache gcc musl-dev linux-headers python3-dev
+
 #COPIAR LAS LIBRERIAS
 COPY ./back-files/requirements /tmp/requirements
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir --upgrade -r /tmp/requirements/local.txt 
+    && pip install --no-cache-dir --upgrade -r /tmp/requirements/local.txt
+
+# Clean up build dependencies to keep image size small
+RUN apk del gcc musl-dev linux-headers python3-dev 
 
 RUN pip install --no-cache-dir --upgrade pip debugpy -t /tmp
 
