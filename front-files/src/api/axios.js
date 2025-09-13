@@ -1,39 +1,115 @@
 // src/api/axios.js
 import axios from 'axios';
+import { API_CONFIG, HTTP_STATUS } from '../config/api';
+import { storage } from '../utils/storage';
+
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
 
 const axiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001', // Tu backend URL
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// Interceptor para agregar el token JWT a cada request
+// Request interceptor - Add auth token
 axiosInstance.interceptors.request.use(
-    config => {
-        const token = localStorage.getItem('jwt_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    error => Promise.reject(error)
+  (config) => {
+    const token = storage.getAccessToken();
+    if (token && !storage.isSessionExpired()) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Interceptor para manejar tokens expirados o inválidos
+// Response interceptor - Handle token refresh
 axiosInstance.interceptors.response.use(
-    response => response,
-    async error => {
-        const originalRequest = error.config;
-        if (error.response.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true;
-            localStorage.removeItem('jwt_token');
-            delete axiosInstance.defaults.headers.common['Authorization'];
-            // Opcional: redireccionar al login si no estamos ya allí
-            window.location.href = '/login';
-        }
-        return Promise.reject(error);
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle network errors
+    if (!error.response) {
+      return Promise.reject(new Error('Network error. Please check your connection.'));
     }
+
+    // Handle 401 errors with token refresh
+    if (error.response.status === HTTP_STATUS.UNAUTHORIZED && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return axiosInstance(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = storage.getRefreshToken();
+      
+      if (!refreshToken) {
+        processQueue(error, null);
+        storage.clearAuth();
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
+
+      try {
+        const response = await axios.post(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH}`, {
+          refreshToken
+        });
+
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        
+        storage.setAccessToken(accessToken);
+        if (newRefreshToken) {
+          storage.setRefreshToken(newRefreshToken);
+        }
+
+        // Set new session expiry (1 hour from now)
+        const expiry = new Date();
+        expiry.setHours(expiry.getHours() + 1);
+        storage.setSessionExpiry(expiry);
+
+        processQueue(null, accessToken);
+        
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return axiosInstance(originalRequest);
+
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        storage.clearAuth();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;

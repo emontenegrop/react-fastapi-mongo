@@ -1,153 +1,236 @@
 // src/pages/LoginPage.js
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
 import { useAuth } from "../contexts/AuthContext";
+import { validationSchemas, rateLimiter } from "../utils/validation";
 import {
   Eye,
   EyeOff,
-  User,
-  Lock,
   Mail,
-  Shield,
-  Menu,
-  X,
-  Home,
-  Users,
-  Settings,
-  BarChart,
-  FileText,
-  LogOut,
+  Lock,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const LoginSchema = Yup.object().shape({
-  email: Yup.string().email("Email inválido").required("El email es requerido"),
-  password: Yup.string().required("La contraseña es requerida"),
-});
-
 const LoginPage = () => {
-  const { login } = useAuth(); // Supongamos que este hook tiene la función login
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const { login, error, clearError, loading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(0);
 
-  const handleSubmit = async (values, { setSubmitting, setErrors }) => {
-    //funciones de Formik para controlar el estado de envío y los errores.
+  // Check rate limiting on component mount
+  useEffect(() => {
+    checkRateLimit();
+  }, []);
+
+  // Update remaining time for blocked users
+  useEffect(() => {
+    let interval;
+    if (isBlocked && remainingTime > 0) {
+      interval = setInterval(() => {
+        const remaining = rateLimiter.getRemainingTime('login');
+        setRemainingTime(remaining);
+        
+        if (remaining <= 0) {
+          setIsBlocked(false);
+          setRemainingTime(0);
+        }
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isBlocked, remainingTime]);
+
+  const checkRateLimit = () => {
+    const blocked = rateLimiter.isBlocked('login');
+    setIsBlocked(blocked);
+    
+    if (blocked) {
+      const remaining = rateLimiter.getRemainingTime('login');
+      setRemainingTime(remaining);
+    }
+  };
+
+  const handleSubmit = async (values, { setSubmitting, setErrors, setFieldError }) => {
     try {
+      // Clear any previous errors
+      clearError();
+      
+      // Check rate limiting
+      if (rateLimiter.isBlocked('login')) {
+        checkRateLimit();
+        setErrors({ 
+          general: `Demasiados intentos fallidos. Intente nuevamente en ${Math.ceil(remainingTime / 1000 / 60)} minutos.` 
+        });
+        return;
+      }
+
+      // Record login attempt
+      rateLimiter.recordAttempt('login');
+      
       await login(values.email, values.password);
+      
     } catch (error) {
-      setErrors({ general: error.message });
+      // Check if we should block further attempts
+      checkRateLimit();
+      
+      // Set appropriate error message
+      if (error.message.includes('credenciales')) {
+        setFieldError('password', 'Credenciales incorrectas');
+      } else if (error.message.includes('red')) {
+        setErrors({ general: 'Error de conexión. Verifique su internet.' });
+      } else {
+        setErrors({ general: error.message });
+      }
     } finally {
       setSubmitting(false);
     }
-  }; // Función que se ejecuta al enviar el formulario
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  }; // Función utilizada  para mostrar el contenido del campo password
+  };
+
+  const formatTime = (ms) => {
+    const minutes = Math.floor(ms / 1000 / 60);
+    const seconds = Math.floor((ms / 1000) % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4">
-            <Shield className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Iniciar Sesión</h1>
-          <p className="text-gray-600 mt-2">
-            Accede a tu cuenta de forma segura
-          </p>
-        </div>
+    <div>
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Iniciar Sesión</h1>
+        <p className="text-gray-600 mt-2">
+          Accede a tu cuenta de forma segura
+        </p>
+      </div>
         <Formik
-          initialValues={{ email: "", password: "" }} // Valores iniciales del formulario
-          validationSchema={LoginSchema}
+          initialValues={{ email: "", password: "" }}
+          validationSchema={validationSchemas.login}
           onSubmit={handleSubmit}
+          enableReinitialize
         >
-          {({ isSubmitting, errors }) => (
+          {({ isSubmitting, errors, touched }) => (
             <Form>
-              <div className="mb-4">
-                <label
-                  htmlFor="email"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Email:
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Field
-                    type="email"
-                    name="email"
-                    className="shadow appearance-none border rounded w-full pl-10 pr-4 py-3 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="Ingrese su email"
-                  />
-                  <ErrorMessage
-                    name="email"
-                    component="div"
-                    className="text-red-500 text-xs italic"
-                  />
-                </div>
-              </div>
-              <div className="mb-6">
-                <label
-                  htmlFor="password"
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Contraseña:
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                  <Field
-                    // Dynamically set type based on showPassword state
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    className="shadow appearance-none border rounded w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Ingrese su contraseña"
-                  />
-                  <button
-                    type="button" // Important: type="button" to prevent form submission
-                    onClick={togglePasswordVisibility}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 focus:outline-none"
-                    aria-label={
-                      showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-                    }
-                  >
-                    {/* Render Eye or EyeOff based on showPassword state */}
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5 text-gray-500" />
-                    ) : (
-                      <Eye className="w-5 h-5 text-gray-500" />
-                    )}
-                  </button>
-                  <ErrorMessage
-                    name="password"
-                    component="div"
-                    className="text-red-500 text-xs italic"
-                  />
-                </div>
-              </div>
-              {errors.general && (
-                <div className="text-red-500 text-center mb-4">
-                  {errors.general}
+              {/* Global error message */}
+              {(error || errors.general) && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                  <span className="text-red-700 text-sm">
+                    {error || errors.general}
+                  </span>
                 </div>
               )}
-              <div className="flex items-center justify-between">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? "Iniciando sesión..." : "Iniciar Sesión"}
-                </button>
+
+              {/* Rate limiting warning */}
+              {isBlocked && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center space-x-2">
+                  <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                  <div className="text-yellow-700 text-sm">
+                    <p>Cuenta temporalmente bloqueada</p>
+                    <p>Tiempo restante: {formatTime(remainingTime)}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {/* Email Field */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    Correo Electrónico
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <Field
+                      type="email"
+                      name="email"
+                      autoComplete="email"
+                      className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                        touched.email && errors.email 
+                          ? 'border-red-300 bg-red-50' 
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="ejemplo@correo.com"
+                      disabled={isBlocked || loading}
+                    />
+                  </div>
+                  <ErrorMessage
+                    name="email"
+                    component="div"
+                    className="mt-1 text-red-500 text-xs"
+                  />
+                </div>
+
+                {/* Password Field */}
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <Field
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      autoComplete="current-password"
+                      className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                        touched.password && errors.password 
+                          ? 'border-red-300 bg-red-50' 
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="Ingrese su contraseña"
+                      disabled={isBlocked || loading}
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="mt-1 text-red-500 text-xs"
+                  />
+                </div>
               </div>
-              <br></br>
-              <div className="text-center mb-8">
-              <Link to="/forgot-password" className="text-blue-600 hover:text-blue-800">
-                  <p>¿Olvidaste tu contraseña?</p>
-              </Link>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting || isBlocked || loading}
+                className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              >
+                {(isSubmitting || loading) && (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                )}
+                <span>
+                  {isSubmitting || loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                </span>
+              </button>
+
+              {/* Forgot Password Link */}
+              <div className="text-center mt-4">
+                <Link 
+                  to="/forgot-password" 
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
               </div>
             </Form>
           )}
         </Formik>
-      </div>
     </div>
   );
 };
