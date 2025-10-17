@@ -1,22 +1,13 @@
-// MongoDB initialization script
-// This script runs when MongoDB starts for the first time
-
-// Switch to the admin database to create user
 db = db.getSiblingDB('admin');
 
-// Create application user
 db.createUser({
   user: "archivos_app",
-  pwd: "archivo_secure_2024_P@ssw0rd!",
+  pwd: "archivo_secure_2024_Password123",
   roles: [
-    {
-      role: "readWrite",
-      db: "archivos"
-    },
-    {
-      role: "dbAdmin",
-      db: "archivos"
-    }
+    { role: "readWrite", db: "archivos" },
+    { role: "dbOwner", db: "archivos" },
+    { role: "backup", db: "admin" },
+    { role: "restore", db: "admin" }
   ]
 });
 

@@ -1,8 +1,9 @@
 volumes:
   postgres_data: {}
   postgres_data_backups: {}
-  mongo-data: {}
-  redis-data: {}
+  mongodb_data: {}
+  mongodb_data_configdb: {}
+  redis_data: {}
 
 secrets:
   mongo_user:
@@ -13,33 +14,57 @@ secrets:
     file: ./secrets/jwt_secret.txt
 
 services:
+  # mongodb:
+  #   image: mongodb/mongodb-community-server:8.0-ubi9
+  #   container_name: mongodb
+  #   restart: unless-stopped
+  #   environment:
+  #     - TZ=America/Guayaquil
+  #     - MONGO_INITDB_ROOT_USERNAME=archivos_app
+  #     - MONGO_INITDB_ROOT_PASSWORD=archivo_secure_2024_Password123
+  #     - MONGO_INITDB_DATABASE=archivos
+  #   volumes:
+  #     - mongo-data:/data/db
+  #     - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+  #   ports:
+  #     - 27017:27017
+  #   healthcheck:
+  #     test: ["CMD", "mongosh", "-u", "archivos_app", "-p", "archivo_secure_2024_Password123", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+  #   networks:
+  #     archivos:
+  #       ipv4_address: 30.30.1.10
+
+
   mongodb:
-    image: mongodb/mongodb-community-server:8.0-ubi9
+    image: mongo:8.0
     container_name: mongodb
     restart: unless-stopped
-    command: ["mongod", "--noauth"]
-    environment:
-      - TZ=America/Guayaquil
-    volumes:
-      - mongo-data:/data/db
     ports:
-      - 27017:27017
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_data_configdb:/data/configdb
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       archivos:
         ipv4_address: 30.30.1.10
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+      
 
   redis:
     image: redis:7.2-alpine
     container_name: redis
     restart: unless-stopped
     volumes:
-      - redis-data:/data
+      - redis_data:/data
       - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
     command: redis-server /usr/local/etc/redis/redis.conf
     ports:
@@ -91,17 +116,6 @@ services:
       - 5680:5678
     secrets:
       - jwt_secret
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "-H", "Accept: application/json", "http://localhost:8080/api/v1/health/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
     networks:
       archivos:
         ipv4_address: 30.30.1.7
