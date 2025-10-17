@@ -29,7 +29,7 @@ public class Roles {
     private String createdBy;
     @Column(name = "updated_by")
     private String updatedBy;
-    @Column(name = "created-at", nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
